@@ -1,0 +1,27 @@
+#! products
+
+
+
+- case_title: "Query Product List Successfully"
+  payload:
+    keyword: "phone"
+    page: 1
+    page_size: 10
+  expected_status: 200
+  expected_code: 200
+
+- case_title: "Create Product Successfully"
+  payload:
+    name: "Wireless Headphones"
+    price: 99.99
+    stock: 100
+  expected_status: 200
+  expected_code: 200
+
+- case_title: "Create Product Failed with Invalid Price"
+  payload:
+    name: "Bad Price Item"
+    price: -10.00
+    stock: 50
+  expected_status: 422
+  expected_code: 422

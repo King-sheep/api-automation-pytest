@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+# Directory where pytest searches for test files
+testpaths = ["test_cases"]
+
+# File naming convention for discovering test cases
+python_files = ["test_*.py"]
+
+# Class naming convention for test execution
+python_classes = ["Test*"]
+
+# Function/Method naming convention for test cases
+python_functions = ["test_*"]
+
+# CLI arguments:
+# -s : Allow print statements to be shown in output
+# -v : Enable verbose output
+# --reruns 2 : Automatically retry failed tests up to 2 times
+# --reruns-delay 1 : Wait 1 second between test retries
+addopts = "-s -v --reruns 2 --reruns-delay 1"

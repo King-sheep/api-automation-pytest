@@ -1,0 +1,16 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment (Do NOT push local venv to remote repo)
+.venv/
+venv/
+
+# Logs & Pytest cache
+*.log
+logs/
+.pytest_cache/
+
+# VS Code local config
+.vscode/

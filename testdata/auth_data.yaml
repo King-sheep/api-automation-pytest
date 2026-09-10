@@ -1,0 +1,18 @@
+#! login / register
+
+
+
+
+- case_title: "Login Success with Valid Credentials"
+  payload:
+    username: "admin"
+    password: "Password123!"
+  expected_status: 200
+  expected_code: 200
+
+- case_title: "Login Failed with Invalid Password"
+  payload:
+    username: "admin"
+    password: "WrongPassword!"
+  expected_status: 400
+  expected_code: 400

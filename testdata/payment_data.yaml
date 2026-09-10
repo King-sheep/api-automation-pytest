@@ -1,0 +1,19 @@
+#! payment
+
+
+
+- case_title: "Process Payment Successfully"
+  payload:
+    order_id: "ORD_TEST_001"
+    payment_method: "CREDIT_CARD"
+    amount: 199.98
+  expected_status: 200
+  expected_code: 200
+
+- case_title: "Process Payment Failed with Invalid Method"
+  payload:
+    order_id: "ORD_TEST_002"
+    payment_method: "UNSUPPORTED_METHOD"
+    amount: 50.00
+  expected_status: 400
+  expected_code: 400

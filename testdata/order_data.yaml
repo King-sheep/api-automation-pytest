@@ -1,0 +1,19 @@
+#! order
+
+
+
+- case_title: "Create Order Successfully"
+  payload:
+    items:
+      - product_id: 1
+        quantity: 1
+  expected_status: 200
+  expected_code: 200
+
+- case_title: "Create Order Failed with Invalid Quantity"
+  payload:
+    items:
+      - product_id: 1
+        quantity: 0
+  expected_status: 422
+  expected_code: 422
