@@ -6,7 +6,7 @@
 
 import os
 import yaml
-from logger import log
+from utils.logger import log
 from pathlib import Path
 
 
