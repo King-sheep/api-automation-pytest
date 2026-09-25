@@ -1,19 +1,89 @@
 #! order
 
 
-
-- case_title: "Create Order Successfully"
+# Create ==============================================================================================
+- case_title: "Create order successfully with valid items"
+  action: "create_order"
   payload:
     items:
       - product_id: 1
         quantity: 1
+      - product_id: 2
+        quantity: 1
   expected_status: 200
   expected_code: 200
+  expected_msg: "successfully"
 
-- case_title: "Create Order Failed with Invalid Quantity"
+- case_title: "Create order with empty items list should fail"
+  action: "create_order"
+  payload:
+    items: []
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "Field"
+
+- case_title: "Create order with non-existent product ID"
+  action: "create_order"
   payload:
     items:
-      - product_id: 1
-        quantity: 0
-  expected_status: 422
+      - product_id: 99999
+        quantity: 1
+  expected_status: 200
+  expected_code: 400
+  expected_msg: "product not found"
+
+
+# Query ==================================================================================================
+- case_title: "Query order by valid order IDs"
+  action: "query_orders"
+  payload:
+    order_ids: ["ORD202609251639498CFD41"]
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "successfully"
+
+- case_title: "Query order with empty order IDs list should fail"
+  action: "query_orders"
+  payload:
+    order_ids: []
+  expected_status: 200
   expected_code: 422
+  expected_msg: "Field error"
+
+
+# update ==================================================================================================
+- case_title: "Update order status successfully"
+  action: "update_order_status"
+  payload:
+    order_id: "ORD202609251639498CFD41"
+    status: "SHIPPED"
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "Order status updated successfully"
+
+- case_title: "Update order status with empty order_id should fail"
+  action: "update_order_status"
+  payload:
+    order_id: ""
+    status: "SHIPPED"
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "Field error"
+
+
+# cancel ==================================================================================================
+- case_title: "Cancel order successfully"
+  action: "cancel_order"
+  payload:
+    order_id: "ORD20260925175759F4F957"
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "Order cancelled successfull"
+
+- case_title: "Cancel order with empty order_id should fail"
+  action: "cancel_order"
+  payload:
+    order_id: ""
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "Field error"

@@ -1,0 +1,44 @@
+- case_title: "test_login_success"
+  description: "Login successfully with valid credentials"
+  payload:
+    username: "wzh190804003"
+    password: "wzhpwd190804"
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "successful"
+
+- case_title: "test_login_wrong_password"
+  description: "Fail to login with incorrect password"
+  payload:
+    username: "wzh190804003"
+    password: "wzhpwd19080"
+  expected_status: 200
+  expected_code: 400
+  expected_msg: "Incorrect"
+
+- case_title: "test_login_user_not_exist"
+  description: "Fail to login when username does not exist"
+  payload:
+    username: "wzh19080400"
+    password: "wzhpwd190804"
+  expected_status: 200
+  expected_code: 400
+  expected_msg: "Incorrect"
+
+- case_title: "test_login_pwd_is_null"
+  description: "Fail to login when pwd is null"
+  payload:
+    username: "wzh190804003"
+    password: ""
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "error"
+
+- case_title: "test_login_acc_is_null"
+  description: "Fail to login when acc is null"
+  payload:
+    username: ""
+    password: "wzhpwd190804"
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "error"

@@ -22,11 +22,8 @@ class TestAuth:
     )
     def test_login(self, auth_service, case):
         """Data-driven test for login endpoint."""
-        response = auth_service.login(case["payload"])
+        response = auth_service.register(case["payload"])
         res_data = response.json()
 
         assert response.status_code == case["expected_status"]
         assert res_data.get("code") == case["expected_code"]
-
-        if response.status_code == 200:
-            assert "access_token" in res_data.get("data", {})

@@ -2,18 +2,43 @@
 
 
 
-- case_title: "Process Payment Successfully"
+# Create ================================================================================================
+- case_title: "Create payment successfully with dynamic order dependency"
+  action: "create_payment"
+  need_dynamic_order: true  # Flag to indicate order_id and amount come from the fixture
   payload:
-    order_id: "ORD_TEST_001"
     payment_method: "CREDIT_CARD"
-    amount: 199.98
   expected_status: 200
   expected_code: 200
+  expected_msg: "successfully"
 
-- case_title: "Process Payment Failed with Invalid Method"
+- case_title: "Create payment with non-existent order ID should fail"
+  action: "create_payment"
+  need_dynamic_order: false
   payload:
-    order_id: "ORD_TEST_002"
-    payment_method: "UNSUPPORTED_METHOD"
-    amount: 50.00
-  expected_status: 400
+    order_id: "ORD_NOT_EXIST_999"
+    payment_method: "ALIPAY"
+    payment_amount: 100.00
+  expected_status: 200
   expected_code: 400
+  expected_msg: "invalid order"
+
+- case_title: "Create payment with negative amount should fail"
+  action: "create_payment"
+  need_dynamic_order: true   # Use valid order_id, but test invalid amount
+  payload:  
+    payment_method: "WECHAT"
+    payment_amount: -100.00             # Override amount with an invalid negative value
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "Field error"
+
+
+# Get =======================================================================================================
+- case_title: "Get payment records successfully by dynamic order ID"
+  action: "get_payments_by_order_id"
+  need_dynamic_order: true  # Automatically use the newly created order_id for GET /api/v1/payments/{order_id}
+  payload: {}
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "Payment records retrieved successfully"

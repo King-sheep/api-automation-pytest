@@ -9,21 +9,15 @@ from core.client import RestClient
 
 
 class PaymentService:
-    """Encapsulates Transaction Processing and Payment Gateway endpoints."""
+    """Encapsulates Payment processing endpoints using GET method."""
 
     def __init__(self, client: RestClient):
         self.client = client
 
-    def process_payment(self, payment_payload: dict):
-        """
-        POST /api/v1/payments
-        Executes order payment transaction and updates status to PAID.
-        """
-        return self.client.request("POST", "/api/v1/payments", json=payment_payload)
+    def create_payment(self, payload: dict):
+        """POST /api/v1/payments - Create a payment."""
+        return self.client.request("POST", "/api/v1/payments", json=payload)
 
-    def get_payment_info(self, order_id: str):
-        """
-        GET /api/v1/payments/{order_id}
-        Queries transaction details for a specific order.
-        """
+    def get_payments_by_order_id(self, order_id: str):
+        """GET /api/v1/payments/{order_id} - Retrieve payment records by order ID."""
         return self.client.request("GET", f"/api/v1/payments/{order_id}")

@@ -51,7 +51,7 @@ def authenticated_client(client):
     assert response.status_code == 200, f"Global login fixture failed! Response: {response.text}"
     
     res_json = response.json()
-    token = res_json["data"]["access_token"]
+    token = res_json["data"]["token"]
     
     # Inject token into global session headers
     client.set_bearer_token(token)
@@ -61,14 +61,14 @@ def authenticated_client(client):
 
 
 
-
+# 
 @pytest.fixture
 def auth_service(client):
     return AuthService(client)
 
 @pytest.fixture
-def product_service(client):
-    return ProductService(client)
+def product_service(authenticated_client):
+    return ProductService(authenticated_client)
 
 @pytest.fixture
 def order_service(authenticated_client):
@@ -77,3 +77,34 @@ def order_service(authenticated_client):
 @pytest.fixture
 def payment_service(authenticated_client):
     return PaymentService(authenticated_client)
+
+
+
+# Create temporary_order for payment cases =========================================================================
+@pytest.fixture
+def temporary_order(order_service):
+    """
+    Fixture that automatically creates an order and extracts 
+    its order_id and total_amount for downstream payment tests.
+    """
+    # 1. Prepare payload for creating a single order
+    payload = {
+        "items": [
+            {"product_id": 1, "quantity": 1}
+        ]
+    }
+    
+    # 2. Call order service to create order
+    response = order_service.create_order(payload)
+    res_data = response.json()
+    
+    # 3. Extract order_id and total_amount from the newly upgraded API response
+    order_data = res_data.get("data", {})
+    order_id = order_data.get("order_id")
+    total_amount = order_data.get("total_amount")
+    
+    # 4. Yield them as a dictionary to the test function
+    yield {
+        "order_id": order_id,
+        "amount": total_amount
+    }

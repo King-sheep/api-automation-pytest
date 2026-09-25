@@ -3,16 +3,38 @@
 
 
 
-- case_title: "Login Success with Valid Credentials"
+- case_title: "test_register_success"
+  description: "Register a new user successfully with valid credentials"
   payload:
-    username: "admin"
-    password: "Password123!"
+    username: "wzh190804011"
+    password: "SecurePassword123!"
+    email: "wzh190804011@example.com"
   expected_status: 200
   expected_code: 200
 
-- case_title: "Login Failed with Invalid Password"
+- case_title: "test_register_duplicate_username"
+  description: "Fail to register when username already exists"
   payload:
-    username: "admin"
-    password: "WrongPassword!"
-  expected_status: 400
+    username: "wzh190804011"
+    password: "SecurePassword123!"
+    email: "wzh190804011@example.com"
+  expected_status: 200
   expected_code: 400
+
+- case_title: "test_register_pwd_is_null"
+  description: "Fail to register when pwd is null"
+  payload:
+    username: "wzh190804012"
+    password: ""
+    email: "wzh190804012@example.com"
+  expected_status: 200
+  expected_code: 422
+
+- case_title: "test_register_username_is_null"
+  description: "Fail to register when username is null"
+  payload:
+    username: ""
+    password: "SecurePassword123!"
+    email: "auto_user_2026@example.com"
+  expected_status: 200
+  expected_code: 422

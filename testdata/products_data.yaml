@@ -1,0 +1,111 @@
+#! products
+
+
+
+
+# Create prod ====================================================================================
+# normal
+- case_title: "test_create_product_success"
+  description: "Create a new product successfully"
+  action: "create_product"
+  payload:
+    name: "Test Laptop3"
+    price: 4999.99
+    stock: 50
+    description: "A high-performance testing laptop"
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "seccess"
+
+# Not name
+- case_title: "test_create_product_not_name"
+  description: "Create a new prod failed as name is null"
+  action: "create_product"
+  payload:
+    name: ""
+    price: 4999.99
+    stock: 50
+    description: "A high-performance testing laptop"
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "error"
+
+# Not price
+- case_title: "test_create_product_not_price"
+  description: "Create a new prod failed as price is null"
+  action: "create_product"
+  payload:
+    name: "TSL iphone zore pro"
+    price: ""
+    stock: 50
+    description: "A high-performance testing laptop"
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "error"
+
+# Not stock
+- case_title: "test_create_product_not_stock"
+  description: "Create a new prod failed as stock is null"
+  action: "create_product"
+  payload:
+    name: "TSL iphone zore pro"
+    price: "101999"
+    stock: ""
+    description: "A high-performance testing laptop"
+  expected_status: 200
+  expected_code: 422
+  expected_msg: "error"
+
+
+# Get prod =================================================================================================================
+- case_title: "test_get_product_all_fetch_success"
+  description: "Get all product details"
+  action: "get_products"
+  payload:
+    name: ""
+    price: ""
+    stock: ""
+    description: ""
+    ids: []
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "success"
+
+- case_title: "test_get_product_by_ids_success"
+  description: "Get product details by prod id"
+  action: "get_products"
+  payload:
+    name: ""
+    price: ""
+    stock: ""
+    description: ""
+    ids: [1, 2]
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "success"
+
+
+# update prod =======================================================================
+- case_title: "test_update_product_success"
+  description: "Update product details successfully"
+  action: "update_product"
+  payload:
+    name: "update1"
+    price: 101999.00
+    stock: 79
+    description: "Don't allowdiscount"
+    id: 8
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "success"
+
+
+# Del ===================================================================================
+- case_title: "test_delete_product_success"
+  description: "Delete product by ID successfully"
+  action: "delete_product"
+  payload:
+    ids: [11]
+  expected_status: 200
+  expected_code: 200
+  expected_msg: "success"

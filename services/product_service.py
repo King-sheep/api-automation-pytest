@@ -40,7 +40,7 @@ class ProductService:
         return self.client.request("PUT", "/api/v1/products/update", json=product_payload)
     
 
-    def delete_products(self, product_ids: list[int]):
+    def delete_product(self, product_ids: list[int]):
         """
         DELETE /api/v1/products
         Batch deletes products by ID list (Requires Authentication).

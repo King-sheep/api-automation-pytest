@@ -16,8 +16,8 @@ class Settings:
 
     # Default Test User Credentials for Authentication
     TEST_USER = {
-        "username": "admin",
-        "password": "Password123!"
+        "username": "wzh190804001",
+        "password": "wzhpwd190804"
     }
 
 

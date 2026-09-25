@@ -21,7 +21,7 @@ class OrderService:
         POST /api/v1/orders
         Creates a new purchase order and deducts inventory.
         """
-        return self.client.request("POST", "/api/v1/orders", json=order_payload)
+        return self.client.request("POST", "/api/v1/orders/add", json=order_payload)
 
     def get_order_detail(self, order_id: str):
         """
@@ -29,3 +29,24 @@ class OrderService:
         Retrieves detailed information for a specific order.
         """
         return self.client.request("GET", f"/api/v1/orders/{order_id}")
+
+    def query_orders(self, query_payload: dict):
+        """
+        POST /api/v1/orders/query
+        Batch or filtered query for orders.
+        """
+        return self.client.request("POST", "/api/v1/orders/batch-query", json=query_payload)
+
+    def update_order_status(self, payload: dict):
+        """
+        PUT /api/v1/orders/status
+        Updates the status of an existing order.
+        """
+        return self.client.request("POST", "/api/v1/orders/status", json=payload)
+
+    def cancel_order(self, payload: dict):
+        """
+        POST /api/v1/orders/cancel
+        Cancels an existing order by order_id.
+        """
+        return self.client.request("POST", "/api/v1/orders/cancel", json=payload)
