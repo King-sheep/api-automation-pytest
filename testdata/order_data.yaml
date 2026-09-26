@@ -37,7 +37,7 @@
 - case_title: "Query order by valid order IDs"
   action: "query_orders"
   payload:
-    order_ids: ["ORD202609251639498CFD41"]
+    order_ids: ["ORD20260925234731CF7F84"]
   expected_status: 200
   expected_code: 200
   expected_msg: "successfully"
@@ -55,7 +55,7 @@
 - case_title: "Update order status successfully"
   action: "update_order_status"
   payload:
-    order_id: "ORD202609251639498CFD41"
+    order_id: "ORD202609252347343389C2"
     status: "SHIPPED"
   expected_status: 200
   expected_code: 200
@@ -75,7 +75,7 @@
 - case_title: "Cancel order successfully"
   action: "cancel_order"
   payload:
-    order_id: "ORD20260925175759F4F957"
+    order_id: "ORD20260925234736D63721"
   expected_status: 200
   expected_code: 200
   expected_msg: "Order cancelled successfull"

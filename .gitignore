@@ -14,3 +14,6 @@ logs/
 
 # VS Code local config
 .vscode/
+
+# Allure
+target
