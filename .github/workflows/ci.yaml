@@ -48,8 +48,21 @@ jobs:
       run: |
         export MYSQL_PASSWORD="SheepWang123456@"
         nohup uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-        sleep 3  # Wait 3 seconds for the service to fully initialize
-
+        
+        # Wait up to 10 seconds for port 8000 to become active
+        echo "Waiting for FastAPI to start..."
+        for i in {1..10}; do
+          if nc -z 127.0.0.1 8000; then
+            echo "FastAPI started successfully!"
+            exit 0
+          fi
+          sleep 1
+        done
+        
+        echo "ERROR: FastAPI failed to start! Printing server.log:"
+        cat server.log
+        exit 1
+        
     # 7. Execute Pytest suite and generate HTML test report
     - name: Run Pytest with HTML Report
       run: |
