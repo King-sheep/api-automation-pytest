@@ -41,7 +41,7 @@ jobs:
     # 5. Automatically import api_init.sql into the cloud MySQL instance
     - name: Import Database SQL
       run: |
-        mysql -h 127.0.0.1 -P 3306 -u root -proot test_db < api_init.sql
+        mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
     # 6. Start FastAPI application in the background
     - name: Start FastAPI server
