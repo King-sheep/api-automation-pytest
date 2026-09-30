@@ -10,31 +10,54 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # 1. Automatically start a MySQL database service in the cloud runner
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db  # Matches your local database name
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
-    # 1. Checkout repository source code
+    # 2. Checkout repository source code
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 2. Set up Python runtime environment
+    # 3. Set up Python runtime environment
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    # 3. Install project dependencies
+    # 4. Install project dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 4. Execute Pytest suite and generate HTML test report
+    # 5. Automatically import api_init.sql into the cloud MySQL instance
+    - name: Import Database SQL
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -proot test_db < api_init.sql
+
+    # 6. Start FastAPI application in the background
+    - name: Start FastAPI server
+      run: |
+        nohup uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+        sleep 3  # Wait 3 seconds for the service to fully initialize
+
+    # 7. Execute Pytest suite and generate HTML test report
     - name: Run Pytest with HTML Report
       run: |
         pytest -v --html=report.html --self-contained-html
 
-    # 5. Upload the generated HTML report as a workflow artifact
+    # 8. Upload the generated HTML report as a workflow artifact
     - name: Upload HTML Test Report
       uses: actions/upload-artifact@v4
+      if: always()  # Always upload regardless of test success or failure
       with:
         name: html-report
         path: report.html

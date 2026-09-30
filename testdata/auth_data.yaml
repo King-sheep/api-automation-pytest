@@ -6,7 +6,7 @@
 - case_title: "test_register_success"
   description: "Register a new user successfully with valid credentials"
   payload:
-    username: "wzh190804011"
+    username: "wzh190804015"
     password: "SecurePassword123!"
     email: "wzh190804011@example.com"
   expected_status: 200
@@ -15,7 +15,7 @@
 - case_title: "test_register_duplicate_username"
   description: "Fail to register when username already exists"
   payload:
-    username: "wzh190804011"
+    username: "wzh190804014"
     password: "SecurePassword123!"
     email: "wzh190804011@example.com"
   expected_status: 200
@@ -24,7 +24,7 @@
 - case_title: "test_register_pwd_is_null"
   description: "Fail to register when pwd is null"
   payload:
-    username: "wzh190804012"
+    username: "wzh190804015"
     password: ""
     email: "wzh190804012@example.com"
   expected_status: 200

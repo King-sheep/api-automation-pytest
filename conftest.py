@@ -61,7 +61,7 @@ def authenticated_client(client):
 
 
 
-# 
+
 @pytest.fixture
 def auth_service(client):
     return AuthService(client)
