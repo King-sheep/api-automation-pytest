@@ -10,75 +10,66 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # 1. Start MySQL service (simplified healthcheck to avoid container startup failure)
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-          MYSQL_DATABASE: test_db
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD}"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=10
-
     steps:
-
-      # 2. Checkout API automation project
+      # 1. Checkout API automation project
       - name: Checkout API Automation Project
         uses: actions/checkout@v4
 
-      # 3. Checkout FastAPI backend project (ChatGPT's advantage)
+      # 2. Checkout FastAPI backend project
       - name: Checkout E-Business Backend
         uses: actions/checkout@v4
         with:
           repository: King-sheep/E-Business
           path: E-Business
 
-      # 4. Set up Python
+      # 3. Set up Python
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
-      # 5. Install dependencies
+      # 4. Install dependencies
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-
-          # API automation dependencies
           python -m pip install -r requirements.txt
-
-          # FastAPI backend dependencies
           python -m pip install -r E-Business/requirements.txt
-
-          # Test reporting & network tools
           python -m pip install pytest-html
 
-      # 6. Initialize database (with robust waiting loop)
+      # 5. Manually start MySQL container (No rigid healthcheck to fail)
+      - name: Start MySQL Container
+        env:
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        run: |
+          docker run -d \
+            --name mysql \
+            -p 3306:3306 \
+            -e MYSQL_ROOT_PASSWORD="${MYSQL_PASSWORD}" \
+            -e MYSQL_DATABASE=test_db \
+            mysql:8.0
+
+          echo "Waiting for MySQL to be fully ready..."
+          for i in {1..30}; do
+            if docker exec mysql mysqladmin ping -h 127.0.0.1 -uroot -p"${MYSQL_PASSWORD}" --silent; then
+              echo "MySQL is up and running!"
+              break
+            fi
+            echo "Waiting... $i"
+            sleep 3
+          done
+
+      # 6. Initialize database
       - name: Import Database SQL
         env:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: |
-          echo "Waiting for MySQL port to be ready..."
-          for i in {1..30}; do
-            if nc -z 127.0.0.1 3306; then
-              echo "MySQL is up and running!"
-              break
-            fi
-            sleep 2
-          done
-
           mysql -h 127.0.0.1 \
                 -P 3306 \
                 -u root \
                 -p"${MYSQL_PASSWORD}" \
                 test_db < api_init.sql
 
-      # 7. Start FastAPI backend (in E-Business directory)
+      # 7. Start FastAPI backend
       - name: Start FastAPI Server
         working-directory: E-Business
         env:
@@ -86,10 +77,6 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/E-Business
         run: |
           echo "Current directory: $(pwd)"
-          echo "Python path: $PYTHONPATH"
-          ls -la
-
-          # Start FastAPI in background
           nohup python -m uvicorn main:app \
             --host 127.0.0.1 \
             --port 8000 \
@@ -101,7 +88,6 @@ jobs:
               echo "FastAPI started successfully!"
               exit 0
             fi
-            echo "Waiting... $i"
             sleep 2
           done
 
