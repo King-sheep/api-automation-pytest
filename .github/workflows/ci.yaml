@@ -23,7 +23,7 @@ jobs:
 
     steps:
     # 1. Checkout repository source code
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     # 2. Set up Python runtime environment
@@ -49,24 +49,23 @@ jobs:
     # 5. Start FastAPI Server by dynamically locating main.py
     - name: Start FastAPI Server
       run: |
-        # Set database password and python path
         export MYSQL_PASSWORD="SheepWang123456@"
         
-        # Dynamically find the directory where main.py is located
-        MAIN_PATH=$(find . -name "main.py" -print -quit)
-        echo "Found main.py at: $MAIN_PATH"
+        # 直接在整个工作区根目录下寻找 main.py 的绝对路径并打印所有文件
+        echo "=== Dumping all files in workspace ==="
+        find /home/runner/work -name "main.py"
         
-        # Get its parent directory
-        MAIN_DIR=$(dirname "$MAIN_PATH")
-        cd "$MAIN_DIR"
+        # 强制切到 actions 默认的工作区绝对路径
+        cd /home/runner/work/$(basename $GITHUB_REPOSITORY)/$(basename $GITHUB_REPOSITORY) || cd /home/runner/work/*/*
+        
         export PYTHONPATH=$PWD
+        echo "Forced execution directory: $PWD"
+        ls -la
         
-        echo "Current execution directory: $PWD"
-        
-        # Start uvicorn
+        # 启动服务
         nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
         
-        # Wait for port 8000
+        # 等待启动
         echo "Waiting for FastAPI to start..."
         for i in {1..10}; do
           if nc -z 127.0.0.1 8000; then
