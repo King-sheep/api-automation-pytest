@@ -46,19 +46,22 @@ jobs:
       run: |
           mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
-  # 5. Start FastAPI Server using direct file path
+  # 5. Start FastAPI Server with robust PYTHONPATH
     - name: Start FastAPI Server
       run: |
           export MYSQL_PASSWORD="SheepWang123456@"
+          
+          # 显式将当前目录（项目根目录）加入 Python 模块搜索路径，确保能正确 import api, utils 等子模块
           export PYTHONPATH=$PWD
           
-          echo "Current directory: $PWD"
+          echo "Current execution directory: $PWD"
+          echo "Current PYTHONPATH: $PYTHONPATH"
           ls -la
           
-          # 直接用路径方式启动，避免模块导入路径对齐问题
-          nohup uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          # 启动服务
+          nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
           
-          # 等待服务启动
+          # 等待服务端口激活
           echo "Waiting for FastAPI to start..."
           for i in {1..10}; do
             if nc -z 127.0.0.1 8000; then
@@ -68,7 +71,8 @@ jobs:
             sleep 1
           done
           
-          echo "ERROR: FastAPI failed to start! Printing server.log:"
+          # 如果启动失败，直接把 server.log 的全部内容打印出来，看看究竟是哪个内部 import 报错
+          echo "ERROR: FastAPI failed to start! Printing server.log content:"
           cat server.log
           exit 1
 
