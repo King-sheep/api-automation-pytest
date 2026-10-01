@@ -36,7 +36,7 @@ jobs:
           python -m pip install -r E-Business/requirements.txt
           python -m pip install pytest-html
 
-      # 5. Manually start MySQL container (No rigid healthcheck to fail)
+      # 5. Manually start MySQL container with crash logs
       - name: Start MySQL Container
         env:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
@@ -46,13 +46,21 @@ jobs:
             -p 3306:3306 \
             -e MYSQL_ROOT_PASSWORD="${MYSQL_PASSWORD}" \
             -e MYSQL_DATABASE=test_db \
-            mysql:8.0
+            mysql:8.0 \
+            --default-authentication-plugin=mysql_native_password
 
           echo "Waiting for MySQL to be fully ready..."
-          for i in {1..30}; do
-            if docker exec mysql mysqladmin ping -h 127.0.0.1 -uroot -p"${MYSQL_PASSWORD}" --silent; then
-              echo "MySQL is up and running!"
-              break
+          for i in {1..20}; do
+            if docker ps | grep -q mysql; then
+              if docker exec mysql mysqladmin ping -h 127.0.0.1 -uroot -p"${MYSQL_PASSWORD}" --silent; then
+                echo "MySQL is up and running!"
+                break
+              fi
+            else
+              echo "ERROR: MySQL container has crashed and stopped!"
+              echo "========== MySQL Container Logs =========="
+              docker logs mysql
+              exit 1
             fi
             echo "Waiting... $i"
             sleep 3
