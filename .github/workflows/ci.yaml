@@ -46,14 +46,17 @@ jobs:
       run: |
           mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
-    # 5. Start FastAPI server and check for startup success
+    # 5. Start FastAPI Server
     - name: Start FastAPI Server
       run: |
+        # Explicitly navigate to the workspace root directory where main.py resides
+        cd $GITHUB_WORKSPACE
+        
         # Set up database password and python path environment variables
         export MYSQL_PASSWORD="SheepWang123456@"
         export PYTHONPATH=$PWD
         
-        # Print current working directory and file list for debugging and verification
+        # Print current working directory and file list to verify main.py is present
         echo "Current working directory: $PWD"
         ls -la
         
