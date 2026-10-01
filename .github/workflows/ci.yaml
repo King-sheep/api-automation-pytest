@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # 1. Start MySQL service
+    # 1. Start MySQL service (simplified healthcheck to avoid container startup failure)
     services:
       mysql:
         image: mysql:8.0
@@ -21,10 +21,9 @@ jobs:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD}"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=15
-          --health-start-period=10s
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
 
     steps:
 
@@ -32,7 +31,7 @@ jobs:
       - name: Checkout API Automation Project
         uses: actions/checkout@v4
 
-      # 3. Checkout FastAPI backend project
+      # 3. Checkout FastAPI backend project (ChatGPT's advantage)
       - name: Checkout E-Business Backend
         uses: actions/checkout@v4
         with:
@@ -56,56 +55,57 @@ jobs:
           # FastAPI backend dependencies
           python -m pip install -r E-Business/requirements.txt
 
-          # Test reporting
+          # Test reporting & network tools
           python -m pip install pytest-html
 
-      # 6. Initialize database
+      # 6. Initialize database (with robust waiting loop)
       - name: Import Database SQL
         env:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         run: |
+          echo "Waiting for MySQL port to be ready..."
+          for i in {1..30}; do
+            if nc -z 127.0.0.1 3306; then
+              echo "MySQL is up and running!"
+              break
+            fi
+            sleep 2
+          done
+
           mysql -h 127.0.0.1 \
                 -P 3306 \
                 -u root \
                 -p"${MYSQL_PASSWORD}" \
                 test_db < api_init.sql
 
-      # 7. Start FastAPI backend
+      # 7. Start FastAPI backend (in E-Business directory)
       - name: Start FastAPI Server
         working-directory: E-Business
         env:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           PYTHONPATH: ${{ github.workspace }}/E-Business
         run: |
-          echo "Current directory:"
-          pwd
-
-          echo "Python path:"
-          echo "$PYTHONPATH"
-
-          echo "E-Business files:"
+          echo "Current directory: $(pwd)"
+          echo "Python path: $PYTHONPATH"
           ls -la
 
-          # Start FastAPI
+          # Start FastAPI in background
           nohup python -m uvicorn main:app \
             --host 127.0.0.1 \
             --port 8000 \
             > server.log 2>&1 &
 
           echo "Waiting for FastAPI to start..."
-
           for i in {1..20}; do
             if curl -s http://127.0.0.1:8000/docs > /dev/null; then
               echo "FastAPI started successfully!"
               exit 0
             fi
-
             echo "Waiting... $i"
             sleep 2
           done
 
-          echo "ERROR: FastAPI failed to start!"
-          echo "========== server.log =========="
+          echo "ERROR: FastAPI failed to start! Printing server.log:"
           cat server.log
           exit 1
 
