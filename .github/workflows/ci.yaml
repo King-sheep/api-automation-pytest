@@ -35,17 +35,22 @@ jobs:
     # 4. Install project dependencies, Automatically import api_init.sql into the cloud MySQL instance, Start FastAPI application in the background
     - name: Setup Environment and Start FastAPI
       run: |
-        echo "=== 1. Upgrading pip and installing dependencies ==="
+        echo "=== 1. Upgrading pip ==="
         python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
         
-        echo "=== 2. Verifying installed packages ==="
+        echo "=== 2. Installing core web & database dependencies explicitly ==="
+        python -m pip install fastapi uvicorn[standard] pymysql requests pytest pytest-html allure-pytest sqlalchemy pydantic
+        
+        echo "=== 3. Installing remaining requirements if any ==="
+        python -m pip install -r requirements.txt || true
+        
+        echo "=== 4. Verifying installed packages ==="
         python -m pip list
         
-        echo "=== 3. Importing Database SQL ==="
+        echo "=== 5. Importing Database SQL ==="
         mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
         
-        echo "=== 4. Starting FastAPI server ==="
+        echo "=== 6. Starting FastAPI server ==="
         export MYSQL_PASSWORD="SheepWang123456@"
         nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
         
