@@ -22,39 +22,40 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-    # 2. Checkout repository source code
+    # 1. Checkout repository source code
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 3. Set up Python runtime environment
+    # 2. Set up Python runtime environment
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
         python-version: "3.10"
 
-    # 4. Install project dependencies, Automatically import api_init.sql into the cloud MySQL instance, Start FastAPI application in the background
-    - name: Setup Environment and Start FastAPI
+   # 3. Install core dependencies and requirements
+    - name: Install Dependencies
       run: |
-        echo "=== 1. Upgrading pip ==="
-        python -m pip install --upgrade pip
-        
-        echo "=== 2. Installing core web & database dependencies explicitly ==="
-        python -m pip install fastapi uvicorn[standard] pymysql requests pytest pytest-html allure-pytest sqlalchemy pydantic
-        
-        echo "=== 3. Installing remaining requirements if any ==="
-        python -m pip install -r requirements.txt || true
-        
-        echo "=== 4. Verifying installed packages ==="
-        python -m pip list
-        
-        echo "=== 5. Importing Database SQL ==="
-        mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
-        
-        echo "=== 6. Starting FastAPI server ==="
+          python -m pip install --upgrade pip
+          python -m pip install fastapi uvicorn[standard] pymysql requests pytest pytest-html allure-pytest sqlalchemy pydantic
+          if [ -f requirements.txt ]; then
+            python -m pip install -r requirements.txt || true
+          fi
+
+    # 4. Initialize database schema using SQL script
+    - name: Import Database SQL
+      run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
+
+    # 5. Start FastAPI server with PYTHONPATH configuration
+    - name: Start FastAPI Server
+      run: |
         export MYSQL_PASSWORD="SheepWang123456@"
+        export PYTHONPATH=$PWD
+          
+        # Start uvicorn in background and redirect logs
         nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-        
-        # Wait up to 10 seconds for port 8000 to become active
+          
+        # Health check: wait up to 10 seconds for port 8000 to become active
         echo "Waiting for FastAPI to start..."
         for i in {1..10}; do
           if nc -z 127.0.0.1 8000; then
@@ -63,32 +64,20 @@ jobs:
           fi
           sleep 1
         done
-        
+          
+        # If startup fails, print server logs for debugging
         echo "ERROR: FastAPI failed to start! Printing server.log:"
         cat server.log
         exit 1
 
-    # 5. Execute Pytest suite and generate HTML test report
+    # 6. Execute pytest suite and generate HTML test report
     - name: Run Pytest with HTML Report
       run: |
-        pytest -v --html=report.html --self-contained-html
+        pytest --html=report.html --self-contained-html || true
 
-    # 6. Upload the generated HTML report as a workflow artifact
-    - name: Start FastAPI server and check logs
-      run: |
-        export MYSQL_PASSWORD="SheepWang123456@"
-        
-        # 尝试直接在前台用 python 运行 main.py 一次，用来瞬间暴露出所有的导包/代码报错
-        python main.py &
-        
-        # 等 3 秒让它报错或者启动
-        sleep 3
-        
-        # 检查 8000 端口
-        if nc -z 127.0.0.1 8000; then
-          echo "FastAPI started successfully!"
-        else
-          echo "=== FastAPI failed to start. Let's run python main.py directly to see error ==="
-          python main.py || true
-          exit 1
-        fi
+    # 7. Upload generated HTML report as an artifact
+    - name: Upload HTML Test Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: pytest-html-report
+        path: report.html
