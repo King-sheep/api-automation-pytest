@@ -26,7 +26,7 @@
   action: "create_order"
   payload:
     items:
-      - product_id: 9999
+      - product_id: 999999
         quantity: 1
   expected_status: 200
   expected_code: 400
