@@ -46,24 +46,27 @@ jobs:
       run: |
           mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
-    # 5. Start FastAPI Server
+    # 5. Start FastAPI Server by dynamically locating main.py
     - name: Start FastAPI Server
       run: |
-        # Explicitly navigate to the workspace root directory where main.py resides
-        cd $GITHUB_WORKSPACE
-        
-        # Set up database password and python path environment variables
+        # Set database password and python path
         export MYSQL_PASSWORD="SheepWang123456@"
+        
+        # Dynamically find the directory where main.py is located
+        MAIN_PATH=$(find . -name "main.py" -print -quit)
+        echo "Found main.py at: $MAIN_PATH"
+        
+        # Get its parent directory
+        MAIN_DIR=$(dirname "$MAIN_PATH")
+        cd "$MAIN_DIR"
         export PYTHONPATH=$PWD
         
-        # Print current working directory and file list to verify main.py is present
-        echo "Current working directory: $PWD"
-        ls -la
+        echo "Current execution directory: $PWD"
         
-        # Start uvicorn in the background and redirect output to server.log
+        # Start uvicorn
         nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
         
-        # Wait up to 10 seconds for port 8000 to become active
+        # Wait for port 8000
         echo "Waiting for FastAPI to start..."
         for i in {1..10}; do
           if nc -z 127.0.0.1 8000; then
@@ -73,7 +76,6 @@ jobs:
           sleep 1
         done
         
-        # If startup fails, print the server log for troubleshooting
         echo "ERROR: FastAPI failed to start! Printing server.log:"
         cat server.log
         exit 1
