@@ -46,20 +46,22 @@ jobs:
       run: |
           mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
-  # 5. Start FastAPI server and check for any internal import/code errors
+    # 5. Start FastAPI server and check for startup success
     - name: Start FastAPI Server
       run: |
+        # Set up database password and python path environment variables
         export MYSQL_PASSWORD="SheepWang123456@"
         export PYTHONPATH=$PWD
         
-        echo "=== Debugging main.py import directly ==="
-        python -c "import main; print('Successfully imported main!')"
+        # Print current working directory and file list for debugging and verification
+        echo "Current working directory: $PWD"
+        ls -la
         
-        echo "=== Starting uvicorn in foreground to capture exact error ==="
-        python -m uvicorn main:app --host 127.0.0.1 --port 8000 &
-        SERVER_PID=$!
+        # Start uvicorn in the background and redirect output to server.log
+        nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
         
-        # Wait up to 10 seconds for port 8000
+        # Wait up to 10 seconds for port 8000 to become active
+        echo "Waiting for FastAPI to start..."
         for i in {1..10}; do
           if nc -z 127.0.0.1 8000; then
             echo "FastAPI started successfully!"
@@ -68,8 +70,9 @@ jobs:
           sleep 1
         done
         
-        echo "=== Process died, checking python import check result ==="
-        kill $SERVER_PID || true
+        # If startup fails, print the server log for troubleshooting
+        echo "ERROR: FastAPI failed to start! Printing server.log:"
+        cat server.log
         exit 1
 
     # 6. Execute pytest suite and generate HTML test report
