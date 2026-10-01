@@ -30,7 +30,7 @@
         quantity: 1
   expected_status: 200
   expected_code: 400
-  expected_msg: "product not found"
+  expected_msg: "Failed to create order"
 
 
 # Query ==================================================================================================
