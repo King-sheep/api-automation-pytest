@@ -23,7 +23,8 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD}"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10
+          --health-retries=15
+          --health-start-period=10s
 
     steps:
 
@@ -76,7 +77,6 @@ jobs:
           MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           PYTHONPATH: ${{ github.workspace }}/E-Business
         run: |
-
           echo "Current directory:"
           pwd
 
@@ -105,10 +105,8 @@ jobs:
           done
 
           echo "ERROR: FastAPI failed to start!"
-
           echo "========== server.log =========="
           cat server.log
-
           exit 1
 
       # 8. Run API automation tests
