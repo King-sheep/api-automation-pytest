@@ -9,7 +9,7 @@
   description: "Create a new product successfully"
   action: "create_product"
   payload:
-    name: "Test Laptop3"
+    name: "Test Laptop33"
     price: 4999.99
     stock: 50
     description: "A high-performance testing laptop"
@@ -90,11 +90,11 @@
   description: "Update product details successfully"
   action: "update_product"
   payload:
-    name: "update1"
+    name: "update11"
     price: 101999.00
     stock: 79
     description: "Don't allowdiscount"
-    id: 8
+    id: 15
   expected_status: 200
   expected_code: 200
   expected_msg: "success"
@@ -105,7 +105,7 @@
   description: "Delete product by ID successfully"
   action: "delete_product"
   payload:
-    ids: [11]
+    ids: [16]
   expected_status: 200
   expected_code: 200
   expected_msg: "success"

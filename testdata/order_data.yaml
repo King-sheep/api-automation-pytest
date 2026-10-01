@@ -26,7 +26,7 @@
   action: "create_order"
   payload:
     items:
-      - product_id: 99999
+      - product_id: 9999
         quantity: 1
   expected_status: 200
   expected_code: 400
@@ -55,7 +55,7 @@
 - case_title: "Update order status successfully"
   action: "update_order_status"
   payload:
-    order_id: "ORD202609252347343389C2"
+    order_id: "ORD202609251915295BC09A"
     status: "SHIPPED"
   expected_status: 200
   expected_code: 200
@@ -75,7 +75,7 @@
 - case_title: "Cancel order successfully"
   action: "cancel_order"
   payload:
-    order_id: "ORD20260925234736D63721"
+    order_id: "ORD20260925233928F06E45"
   expected_status: 200
   expected_code: 200
   expected_msg: "Order cancelled successfull"

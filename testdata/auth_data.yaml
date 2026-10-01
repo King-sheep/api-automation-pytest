@@ -6,16 +6,16 @@
 - case_title: "test_register_success"
   description: "Register a new user successfully with valid credentials"
   payload:
-    username: "wzh190804015"
+    username: "wzh190804016"
     password: "SecurePassword123!"
-    email: "wzh190804011@example.com"
+    email: "wzh190804016@example.com"
   expected_status: 200
   expected_code: 200
 
 - case_title: "test_register_duplicate_username"
   description: "Fail to register when username already exists"
   payload:
-    username: "wzh190804014"
+    username: "wzh190804001"
     password: "SecurePassword123!"
     email: "wzh190804011@example.com"
   expected_status: 200
