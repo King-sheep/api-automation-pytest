@@ -32,20 +32,20 @@ jobs:
       with:
         python-version: "3.10"
 
-    # 4. Install project dependencies
-    - name: Install dependencies
+    # 4. Install project dependencies, Automatically import api_init.sql into the cloud MySQL instance, Start FastAPI application in the background
+    - name: Setup Environment and Start FastAPI
       run: |
+        echo "=== 1. Upgrading pip and installing dependencies ==="
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
-
-    # 5. Automatically import api_init.sql into the cloud MySQL instance
-    - name: Import Database SQL
-      run: |
+        
+        echo "=== 2. Verifying installed packages ==="
+        python -m pip list
+        
+        echo "=== 3. Importing Database SQL ==="
         mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
-
-    # 6. Start FastAPI application in the background
-    - name: Start FastAPI server
-      run: |
+        
+        echo "=== 4. Starting FastAPI server ==="
         export MYSQL_PASSWORD="SheepWang123456@"
         nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
         
@@ -63,12 +63,12 @@ jobs:
         cat server.log
         exit 1
 
-    # 7. Execute Pytest suite and generate HTML test report
+    # 5. Execute Pytest suite and generate HTML test report
     - name: Run Pytest with HTML Report
       run: |
         pytest -v --html=report.html --self-contained-html
 
-    # 8. Upload the generated HTML report as a workflow artifact
+    # 6. Upload the generated HTML report as a workflow artifact
     - name: Upload HTML Test Report
       uses: actions/upload-artifact@v4
       if: always()  # Always upload regardless of test success or failure
