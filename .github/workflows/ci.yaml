@@ -46,38 +46,31 @@ jobs:
       run: |
           mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
 
-    # 5. Start FastAPI Server by dynamically locating main.py
+  # 5. Start FastAPI Server using direct file path
     - name: Start FastAPI Server
       run: |
-        export MYSQL_PASSWORD="SheepWang123456@"
-        
-        # 直接在整个工作区根目录下寻找 main.py 的绝对路径并打印所有文件
-        echo "=== Dumping all files in workspace ==="
-        find /home/runner/work -name "main.py"
-        
-        # 强制切到 actions 默认的工作区绝对路径
-        cd /home/runner/work/$(basename $GITHUB_REPOSITORY)/$(basename $GITHUB_REPOSITORY) || cd /home/runner/work/*/*
-        
-        export PYTHONPATH=$PWD
-        echo "Forced execution directory: $PWD"
-        ls -la
-        
-        # 启动服务
-        nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-        
-        # 等待启动
-        echo "Waiting for FastAPI to start..."
-        for i in {1..10}; do
-          if nc -z 127.0.0.1 8000; then
-            echo "FastAPI started successfully!"
-            exit 0
-          fi
-          sleep 1
-        done
-        
-        echo "ERROR: FastAPI failed to start! Printing server.log:"
-        cat server.log
-        exit 1
+          export MYSQL_PASSWORD="SheepWang123456@"
+          export PYTHONPATH=$PWD
+          
+          echo "Current directory: $PWD"
+          ls -la
+          
+          # 直接用路径方式启动，避免模块导入路径对齐问题
+          nohup uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          
+          # 等待服务启动
+          echo "Waiting for FastAPI to start..."
+          for i in {1..10}; do
+            if nc -z 127.0.0.1 8000; then
+              echo "FastAPI started successfully!"
+              exit 0
+            fi
+            sleep 1
+          done
+          
+          echo "ERROR: FastAPI failed to start! Printing server.log:"
+          cat server.log
+          exit 1
 
     # 6. Execute pytest suite and generate HTML test report
     - name: Run Pytest with HTML Report
