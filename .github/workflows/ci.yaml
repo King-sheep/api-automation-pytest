@@ -74,10 +74,21 @@ jobs:
         pytest -v --html=report.html --self-contained-html
 
     # 6. Upload the generated HTML report as a workflow artifact
-    - name: Upload HTML Test Report
-      uses: actions/upload-artifact@v4
-      if: always()  # Always upload regardless of test success or failure
-      with:
-        name: html-report
-        path: report.html
-        retention-days: 3
+    - name: Start FastAPI server and check logs
+      run: |
+        export MYSQL_PASSWORD="SheepWang123456@"
+        
+        # 尝试直接在前台用 python 运行 main.py 一次，用来瞬间暴露出所有的导包/代码报错
+        python main.py &
+        
+        # 等 3 秒让它报错或者启动
+        sleep 3
+        
+        # 检查 8000 端口
+        if nc -z 127.0.0.1 8000; then
+          echo "FastAPI started successfully!"
+        else
+          echo "=== FastAPI failed to start. Let's run python main.py directly to see error ==="
+          python main.py || true
+          exit 1
+        fi
