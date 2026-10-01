@@ -2,88 +2,128 @@ name: API Automation CI & Report
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
-    # 1. Automatically start a MySQL database service in the cloud runner
+    # 1. Start MySQL service
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: "SheepWang123456@"
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
           MYSQL_DATABASE: test_db
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -p${MYSQL_ROOT_PASSWORD}"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
-    # 1. Checkout repository source code
-    - name: Checkout repository
-      uses: actions/checkout@v4
 
-    # 2. Set up Python runtime environment
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
+      # 2. Checkout API automation project
+      - name: Checkout API Automation Project
+        uses: actions/checkout@v4
 
-   # 3. Install core dependencies and requirements
-    - name: Install Dependencies
-      run: |
+      # 3. Checkout FastAPI backend project
+      - name: Checkout E-Business Backend
+        uses: actions/checkout@v4
+        with:
+          repository: King-sheep/E-Business
+          path: E-Business
+
+      # 4. Set up Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # 5. Install dependencies
+      - name: Install Dependencies
+        run: |
           python -m pip install --upgrade pip
-          python -m pip install fastapi uvicorn[standard] pymysql requests pytest pytest-html allure-pytest sqlalchemy pydantic
-          if [ -f requirements.txt ]; then
-            python -m pip install -r requirements.txt || true
-          fi
 
-    # 4. Initialize database schema using SQL script
-    - name: Import Database SQL
-      run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -p"SheepWang123456@" test_db < api_init.sql
+          # API automation dependencies
+          python -m pip install -r requirements.txt
 
-  # 5. Start FastAPI Server with robust PYTHONPATH
-    - name: Start FastAPI Server
-      run: |
-          export MYSQL_PASSWORD="SheepWang123456@"
-          
-          # 显式将当前目录（项目根目录）加入 Python 模块搜索路径，确保能正确 import api, utils 等子模块
-          export PYTHONPATH=$PWD
-          
-          echo "Current execution directory: $PWD"
-          echo "Current PYTHONPATH: $PYTHONPATH"
+          # FastAPI backend dependencies
+          python -m pip install -r E-Business/requirements.txt
+
+          # Test reporting
+          python -m pip install pytest-html
+
+      # 6. Initialize database
+      - name: Import Database SQL
+        env:
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+        run: |
+          mysql -h 127.0.0.1 \
+                -P 3306 \
+                -u root \
+                -p"${MYSQL_PASSWORD}" \
+                test_db < api_init.sql
+
+      # 7. Start FastAPI backend
+      - name: Start FastAPI Server
+        working-directory: E-Business
+        env:
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          PYTHONPATH: ${{ github.workspace }}/E-Business
+        run: |
+
+          echo "Current directory:"
+          pwd
+
+          echo "Python path:"
+          echo "$PYTHONPATH"
+
+          echo "E-Business files:"
           ls -la
-          
-          # 启动服务
-          nohup python -m uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
-          
-          # 等待服务端口激活
+
+          # Start FastAPI
+          nohup python -m uvicorn main:app \
+            --host 127.0.0.1 \
+            --port 8000 \
+            > server.log 2>&1 &
+
           echo "Waiting for FastAPI to start..."
-          for i in {1..10}; do
-            if nc -z 127.0.0.1 8000; then
+
+          for i in {1..20}; do
+            if curl -s http://127.0.0.1:8000/docs > /dev/null; then
               echo "FastAPI started successfully!"
               exit 0
             fi
-            sleep 1
+
+            echo "Waiting... $i"
+            sleep 2
           done
-          
-          # 如果启动失败，直接把 server.log 的全部内容打印出来，看看究竟是哪个内部 import 报错
-          echo "ERROR: FastAPI failed to start! Printing server.log content:"
+
+          echo "ERROR: FastAPI failed to start!"
+
+          echo "========== server.log =========="
           cat server.log
+
           exit 1
 
-    # 6. Execute pytest suite and generate HTML test report
-    - name: Run Pytest with HTML Report
-      run: |
-        pytest --html=report.html --self-contained-html || true
+      # 8. Run API automation tests
+      - name: Run Pytest with HTML Report
+        env:
+          BASE_URL: http://127.0.0.1:8000
+        run: |
+          pytest \
+            --html=report.html \
+            --self-contained-html
 
-    # 7. Upload generated HTML report as an artifact
-    - name: Upload HTML Test Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: pytest-html-report
-        path: report.html
+      # 9. Upload test report
+      - name: Upload HTML Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-html-report
+          path: report.html
